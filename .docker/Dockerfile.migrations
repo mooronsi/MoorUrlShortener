@@ -1,0 +1,19 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS migrations
+
+RUN apk add --no-cache krb5-libs
+
+WORKDIR /src
+
+COPY ["MoorUrlShortener.slnx", "./"]
+COPY ["src/MoorUrlShortener.Api/MoorUrlShortener.Api.csproj", "src/MoorUrlShortener.Api/"]
+RUN dotnet restore "src/MoorUrlShortener.Api/MoorUrlShortener.Api.csproj"
+
+COPY . .
+WORKDIR "/src/src/MoorUrlShortener.Api"
+
+RUN dotnet build "MoorUrlShortener.Api.csproj" -c Release
+
+RUN dotnet tool install --global dotnet-ef --version 10.*
+ENV PATH="/root/.dotnet/tools:${PATH}"
+
+ENTRYPOINT ["/root/.dotnet/tools/dotnet-ef", "database", "update"]

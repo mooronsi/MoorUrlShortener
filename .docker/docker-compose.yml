@@ -1,0 +1,62 @@
+services:
+  url-shortener-db:
+    image: postgres:17-alpine
+    container_name: url-shortener-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-UrlShortener}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - url-shortener-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-UrlShortener}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - url-shortener-network
+
+  migrations:
+    build:
+      context: ..
+      dockerfile: .docker/Dockerfile.migrations
+    image: ${DOCKER_PREFIX:-local}/url-shortener-migrations:latest
+    container_name: url-shortener-migrations
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=url-shortener-db;Port=5432;Database=${POSTGRES_DB:-UrlShortener};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}
+    depends_on:
+      url-shortener-db:
+        condition: service_healthy
+    networks:
+      - url-shortener-network
+    restart: "no"
+
+  api:
+    build:
+      context: ..
+      dockerfile: .docker/Dockerfile
+    image: ${DOCKER_PREFIX:-local}/url-shortener-api:latest
+    container_name: url-shortener-api
+    ports:
+      - "${API_PORT:-8080}:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
+      - ConnectionStrings__DefaultConnection=Host=url-shortener-db;Port=5432;Database=${POSTGRES_DB:-UrlShortener};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}
+      - BaseUrl=${BASE_URL:-http://localhost:8080/s/}
+    depends_on:
+      url-shortener-db:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    networks:
+      - url-shortener-network
+    restart: unless-stopped
+
+volumes:
+  url-shortener-db-data:
+
+networks:
+  url-shortener-network:
+    driver: bridge
