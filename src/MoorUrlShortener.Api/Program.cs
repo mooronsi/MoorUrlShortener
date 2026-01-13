@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using MoorUrlShortener.Api.Database;
 using MoorUrlShortener.Api.Extensions;
 using MoorUrlShortener.Api.Repositories.ShortenedUrls;
@@ -26,6 +27,28 @@ builder.Services.AddNpgsql<AppDbContext>(builder.Configuration.GetConnectionStri
 builder.Services.AddScoped<IShortenedUrlRepository, ShortenedUrlRepository>();
 builder.Services.AddTransient<IUrlShortenerService, UrlShortenerService>();
 
+var rateLimitConfig = builder.Configuration.GetSection("RateLimiting");
+var permitLimit = rateLimitConfig.GetValue<int>("PermitLimit");
+var window = rateLimitConfig.GetValue<int>("Window");
+var queueLimit = rateLimitConfig.GetValue<int>("QueueLimit");
+
+builder.Services.AddRateLimiter(options =>
+    {
+        options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    AutoReplenishment = true, PermitLimit = permitLimit,
+                    QueueLimit = queueLimit, Window = TimeSpan.FromSeconds(window)
+                }
+            )
+        );
+
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    }
+);
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -38,6 +61,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseRateLimiter();
 
 app.MapApiEndpoints();
 
