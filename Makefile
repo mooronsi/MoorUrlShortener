@@ -15,4 +15,7 @@ up: ## Start the application
 upd: ## Start the application in the background
 	$(DOCKER_COMPOSE) up -d
 
+down: ## Stop the application
+	$(DOCKER_COMPOSE) down
+
 .DEFAULT_GOAL := help

@@ -1,3 +1,16 @@
 <Solution>
-    <Project Path="src\MoorUrlShortener.Api\MoorUrlShortener.Api.csproj" />
+    <Folder Name="/docker/">
+        <File Path=".docker\.dockerignore" />
+        <File Path=".docker\.env" />
+        <File Path=".docker\.env.example" />
+        <File Path=".docker\docker-compose.yml" />
+        <File Path=".docker\Dockerfile" />
+        <File Path=".docker\Dockerfile.migrations" />
+    </Folder>
+    <Folder Name="/src/">
+        <Project Path="src\MoorUrlShortener.Api\MoorUrlShortener.Api.csproj" />
+    </Folder>
+    <Folder Name="/tools/">
+        <File Path="Makefile" />
+    </Folder>
 </Solution>

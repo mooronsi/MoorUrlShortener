@@ -45,6 +45,9 @@ services:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
       - ConnectionStrings__DefaultConnection=Host=url-shortener-db;Port=5432;Database=${POSTGRES_DB:-UrlShortener};Username=${POSTGRES_USER:-postgres};Password=${POSTGRES_PASSWORD:-postgres}
       - BaseUrl=${BASE_URL:-http://localhost:8080/s/}
+      - RateLimiting__PermitLimit=${RATE_LIMIT_PERMIT_LIMIT:-100}
+      - RateLimiting__Window=${RATE_LIMIT_WINDOW:-60}
+      - RateLimiting__QueueLimit=${RATE_LIMIT_QUEUE_LIMIT:-0}
     depends_on:
       url-shortener-db:
         condition: service_healthy
