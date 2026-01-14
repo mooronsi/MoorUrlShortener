@@ -6,9 +6,11 @@
         <File Path=".docker\docker-compose.yml" />
         <File Path=".docker\Dockerfile" />
         <File Path=".docker\Dockerfile.migrations" />
+        <File Path=".docker\Dockerfile.web" />
     </Folder>
     <Folder Name="/src/">
         <Project Path="src\MoorUrlShortener.Api\MoorUrlShortener.Api.csproj" />
+        <Project Path="src\MoorUrlShortener.Web\MoorUrlShortener.Web.csproj" />
     </Folder>
     <Folder Name="/tools/">
         <File Path="Makefile" />

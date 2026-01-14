@@ -18,7 +18,7 @@ services:
     networks:
       - url-shortener-network
 
-  migrations:
+  url-shortener-migrations:
     build:
       context: ..
       dockerfile: .docker/Dockerfile.migrations
@@ -33,7 +33,7 @@ services:
       - url-shortener-network
     restart: "no"
 
-  api:
+  url-shortener-api:
     build:
       context: ..
       dockerfile: .docker/Dockerfile
@@ -51,8 +51,25 @@ services:
     depends_on:
       url-shortener-db:
         condition: service_healthy
-      migrations:
+      url-shortener-migrations:
         condition: service_completed_successfully
+    networks:
+      - url-shortener-network
+    restart: unless-stopped
+
+  url-shortener-web:
+    build:
+      context: ..
+      dockerfile: .docker/Dockerfile.web
+    image: ${DOCKER_PREFIX:-local}/url-shortener-web:latest
+    container_name: url-shortener-web
+    ports:
+      - "${WEB_PORT:-3000}:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:-Development}
+      - ApiUrl=${API_URL:-http://url-shortener-api:8080}
+    depends_on:
+      - url-shortener-api
     networks:
       - url-shortener-network
     restart: unless-stopped

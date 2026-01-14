@@ -12,6 +12,9 @@ build: ## Build Docker images
 up: ## Start the application
 	$(DOCKER_COMPOSE) up
 
+upa: ## Start the api, migrations and db
+	$(DOCKER_COMPOSE) up url-shortener-db url-shortener-migrations url-shortener-api
+
 upd: ## Start the application in the background
 	$(DOCKER_COMPOSE) up -d
 
